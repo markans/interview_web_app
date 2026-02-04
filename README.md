@@ -1,4 +1,4 @@
-# Parakeet AI Clone - Real-time Interview Assistant
+# Real-time Interview Assistant
 
 An open-source clone of Parakeet AI, a real-time job interview assistant. Built with Next.js, Supabase, and a "Bring Your Own Key" (BYOK) model.
 
