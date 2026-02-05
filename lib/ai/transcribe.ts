@@ -37,8 +37,8 @@ export class BrowserSTT {
                 }
             }
 
-            // Only trigger callback when we have final results
-            // This prevents duplicate entries from interim results
+            // Send both interim and final results for real-time display
+            // The interview page will handle deduplication
             const textToSend = finalTranscript.trim() || interimTranscript.trim()
             if (textToSend && this.onTranscriptCallback) {
                 this.onTranscriptCallback(textToSend)
@@ -46,10 +46,18 @@ export class BrowserSTT {
         }
 
         this.recognition.onerror = (event: any) => {
+            // Suppress expected 'no-speech' errors (happens during silence)
+            if (event.error === 'no-speech') {
+                // This is normal - just means there was silence
+                return
+            }
+
+            // Log other errors
             console.error('Speech recognition error:', event.error)
-            // Don't auto-restart on certain errors
-            if (event.error === 'no-speech' || event.error === 'audio-capture') {
-                // These are recoverable, will restart via onend
+
+            // Handle different error types
+            if (event.error === 'audio-capture') {
+                // Recoverable, will restart via onend
             } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
                 // Permission denied, stop trying
                 this.isActive = false
