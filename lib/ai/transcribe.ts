@@ -24,12 +24,23 @@ export class BrowserSTT {
         this.onTranscriptCallback = onTranscript
 
         this.recognition.onresult = (event: any) => {
-            const transcript = Array.from(event.results)
-                .map((result: any) => result[0].transcript)
-                .join('')
+            let finalTranscript = ''
+            let interimTranscript = ''
 
-            if (this.onTranscriptCallback) {
-                this.onTranscriptCallback(transcript)
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript + ' '
+                } else {
+                    interimTranscript += transcript
+                }
+            }
+
+            // Only trigger callback when we have final results
+            // This prevents duplicate entries from interim results
+            const textToSend = finalTranscript.trim() || interimTranscript.trim()
+            if (textToSend && this.onTranscriptCallback) {
+                this.onTranscriptCallback(textToSend)
             }
         }
 
