@@ -14,7 +14,17 @@ interface ConversationEntry {
     answer: string
     loading: boolean
     timestamp: Date
+    isPredefined?: boolean
 }
+
+// Predefined interview questions
+const PREDEFINED_QUESTIONS = [
+    "Tell me about yourself",
+    "What are your greatest strengths?",
+    "What is your biggest weakness?",
+    "Why do you want to work here?",
+    "Where do you see yourself in 5 years?"
+]
 
 export default function InterviewPage() {
     const [isRecording, setIsRecording] = useState(false)
@@ -51,6 +61,19 @@ export default function InterviewPage() {
             setContext(JSON.parse(savedContext))
         }
     }, [])
+
+    // Helper function to check if a question matches a predefined question
+    const matchesPredefinedQuestion = (text: string): string | null => {
+        const lowerText = text.toLowerCase().trim()
+        for (const predefinedQ of PREDEFINED_QUESTIONS) {
+            const lowerPredefined = predefinedQ.toLowerCase()
+            // Check for exact match or if the predefined question is contained in the text
+            if (lowerText === lowerPredefined || lowerText.includes(lowerPredefined)) {
+                return predefinedQ
+            }
+        }
+        return null
+    }
 
     const handleStartRecording = async () => {
         try {
@@ -145,13 +168,19 @@ export default function InterviewPage() {
             return
         }
 
+        // Check if this matches a predefined question
+        const matchedQuestion = matchesPredefinedQuestion(question)
+        const isPredefined = matchedQuestion !== null
+        const displayQuestion = isPredefined ? matchedQuestion : question.trim()
+
         // Create new entry with loading state
         const newEntry: ConversationEntry = {
             id: Date.now().toString(),
-            question: question.trim(),
+            question: displayQuestion,
             answer: '',
             loading: true,
             timestamp: new Date(),
+            isPredefined,
         }
 
         setConversations(prev => [...prev, newEntry])
@@ -161,7 +190,7 @@ export default function InterviewPage() {
             try {
                 const answer = await generateAnswer({
                     config,
-                    prompt: question,
+                    prompt: displayQuestion,
                     context,
                 })
 
@@ -386,7 +415,14 @@ export default function InterviewPage() {
                                         {/* Question */}
                                         <div className="flex justify-end">
                                             <div className="max-w-[80%] bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-500/50 rounded-lg p-4">
-                                                <p className="text-sm text-purple-300 mb-1">Question</p>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <p className="text-sm text-purple-300">Question</p>
+                                                    {conv.isPredefined && (
+                                                        <span className="text-xs px-2 py-0.5 bg-blue-500/30 border border-blue-400/50 rounded-full text-blue-200">
+                                                            Interviewer
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <p className="text-white">{conv.question}</p>
                                             </div>
                                         </div>
