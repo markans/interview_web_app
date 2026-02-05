@@ -96,19 +96,10 @@ export default function InterviewPage() {
                         finalText !== lastProcessedTranscriptRef.current &&
                         !isProcessingRef.current) {
 
-                        // Add to full transcript (all speech)
-                        setFullTranscript(prev => prev ? prev + '\n\n' + finalText : finalText)
+                        isProcessingRef.current = true
+                        lastProcessedTranscriptRef.current = finalText
 
-                        // Check if it's a question
-                        if (isQuestion(finalText)) {
-                            // It's a question - create conversation entry with AI response
-                            isProcessingRef.current = true
-                            lastProcessedTranscriptRef.current = finalText
-                            handleCreateConversationEntry(finalText)
-                        } else {
-                            // Not a question - just update the last processed to avoid reprocessing
-                            lastProcessedTranscriptRef.current = finalText
-                        }
+                        handleCreateConversationEntry(finalText)
 
                         // Clear current transcript for next question
                         setCurrentTranscript('')
@@ -357,21 +348,6 @@ export default function InterviewPage() {
                         )}
                     </div>
 
-                    {/* Full Transcript Section */}
-                    {fullTranscript && (
-                        <div className="mb-6">
-                            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h3 className="text-sm font-semibold text-blue-300">Full Transcript</h3>
-                                    <span className="text-xs text-gray-400">All captured speech</span>
-                                </div>
-                                <div className="text-sm text-gray-300 whitespace-pre-wrap max-h-40 overflow-y-auto">
-                                    {fullTranscript}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                     {/* Conversation History */}
                     <div className="min-h-[500px] max-h-[700px] overflow-y-auto p-4 bg-black/20 rounded-lg space-y-6">
                         {conversations.length === 0 && !currentTranscript ? (
@@ -456,7 +432,7 @@ export default function InterviewPage() {
                     {/* Info Message */}
                     {isRecording && (
                         <p className="mt-4 text-center text-sm text-gray-400">
-                            All speech is captured. AI will auto-generate answers for detected questions after 5 seconds of silence.
+                            AI will auto-generate answers after 5 seconds of silence
                         </p>
                     )}
                 </div>

@@ -2,6 +2,7 @@
 export class BrowserSTT {
     private recognition: any
     private onTranscriptCallback?: (text: string) => void
+    private isActive: boolean = false
 
     constructor() {
         if (typeof window !== 'undefined') {
@@ -46,12 +47,33 @@ export class BrowserSTT {
 
         this.recognition.onerror = (event: any) => {
             console.error('Speech recognition error:', event.error)
+            // Don't auto-restart on certain errors
+            if (event.error === 'no-speech' || event.error === 'audio-capture') {
+                // These are recoverable, will restart via onend
+            } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                // Permission denied, stop trying
+                this.isActive = false
+            }
         }
 
+        this.recognition.onend = () => {
+            // Auto-restart if still active
+            if (this.isActive) {
+                try {
+                    this.recognition.start()
+                } catch (err) {
+                    console.error('Failed to restart recognition:', err)
+                    // Will try again on next onend
+                }
+            }
+        }
+
+        this.isActive = true
         this.recognition.start()
     }
 
     stop() {
+        this.isActive = false
         if (this.recognition) {
             this.recognition.stop()
         }
